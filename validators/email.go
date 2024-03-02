@@ -1,6 +1,7 @@
-package formats
+package validators
 
 import (
+	"net"
 	"strconv"
 	"strings"
 
@@ -9,8 +10,9 @@ import (
 )
 
 type Email struct {
-	Field  string
-	NotNil bool
+	Field   string
+	NotNil  bool
+	CheckMx bool
 }
 
 func (e *Email) GetField() string {
@@ -90,7 +92,7 @@ func (e *Email) Validate(v any, path []any, lang string) error {
 		return err
 	}
 
-	return IsDomainNameValid(e.Field, email, parts[1], path, lang)
+	return IsDomainNameValid(e.Field, email, parts[1], path, e.CheckMx, lang)
 
 }
 
@@ -131,7 +133,7 @@ var allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567
 
 var PERIOD byte = '.'
 
-func IsDomainNameValid(field, email, domain string, path []any, lang string) error {
+func IsDomainNameValid(field, email, domain string, path []any, checkMx bool, lang string) error {
 	var l = len(domain)
 
 	if l < 1 {
@@ -200,23 +202,25 @@ func IsDomainNameValid(field, email, domain string, path []any, lang string) err
 				Field:   field,
 				Path:    path,
 				Value:   email,
-				Message: label_longErr(l, i+1, lang),
+				Message: domain_longLabelErr(l, i+1, lang),
 			}
 		}
 
 	}
 
-	// check mx record for domain
-	/* mxRcds, err := net.LookupMX(domain)
+	if checkMx {
+
+		mxRcds, err := net.LookupMX(domain)
 
 		if err != nil || len(mxRcds) == 0 {
 			return &types.ValidationErr{
 				Field:   field,
-	Path:    path,
+				Path:    path,
 				Value:   email,
-				Message: "",
+				Message: domain_invalidErr(lang),
 			}
-		} */
+		}
+	}
 
 	return nil
 }
@@ -272,7 +276,7 @@ func domain_twoAdjacentPeriodsErr(lang string) string {
 	return "The part after the @ sign should not contain two adjacent periods"
 }
 
-func label_longErr(labelLen, sec int, lang string) string {
+func domain_longLabelErr(labelLen, sec int, lang string) string {
 	var strLen, strSec = strconv.Itoa(labelLen), strconv.Itoa(sec)
 
 	if lang == "ar" {
@@ -280,6 +284,13 @@ func label_longErr(labelLen, sec int, lang string) string {
 	}
 
 	return "The length of one section of the part after the @ tag must not exceed 63 characters (you are currently using " + strLen + " characters in section " + strSec + ")"
+}
+
+func domain_invalidErr(lang string) string {
+	if lang == "ar" {
+		return "الجزء بعد العلامة @ غير صالح."
+	}
+	return "The part after @ sign is invalid"
 }
 
 // var allowedLocalPartChars = domainAllowedChars + "-+!#$%&'*/=?`^{}[]|~"

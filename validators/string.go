@@ -11,7 +11,7 @@ import (
 
 type String struct {
 	Field     string
-	NotNil    bool
+	NilAble   bool
 	MinLength int
 	MaxLength int
 	Enum      []string
@@ -21,24 +21,24 @@ func (s *String) GetField() string {
 	return s.Field
 }
 
-func (s *String) Validate(v any, path []any, lang string) error {
+func (s *String) Validate(v any, path []any, lang string) (*string, error) {
 
 	if v == nil {
-		if s.NotNil {
-			return &types.ValidationErr{
+		if !s.NilAble {
+			return nil, &types.ValidationErr{
 				Field:   s.Field,
 				Path:    path,
 				Value:   types.Omit,
 				Message: errors.InvalidDataType("string", v, lang),
 			}
 		}
-		return nil
+		return nil, nil
 	}
 
 	var vStr, ok = v.(string)
 
 	if !ok {
-		return &types.ValidationErr{
+		return nil, &types.ValidationErr{
 			Field:   s.Field,
 			Path:    path,
 			Value:   types.Omit,
@@ -48,19 +48,19 @@ func (s *String) Validate(v any, path []any, lang string) error {
 
 	if s.Enum != nil {
 		if !slices.Contains(s.Enum, vStr) {
-			return &types.ValidationErr{
+			return nil, &types.ValidationErr{
 				Field:   s.Field,
 				Path:    path,
 				Value:   vStr,
 				Message: unexpectedValue(s.Enum, vStr, lang),
 			}
 		}
-		return nil
+		return &vStr, nil
 	}
 
 	var l = len(vStr)
 	if l < s.MinLength {
-		return &types.ValidationErr{
+		return nil, &types.ValidationErr{
 			Field:   s.Field,
 			Path:    path,
 			Value:   vStr,
@@ -69,7 +69,7 @@ func (s *String) Validate(v any, path []any, lang string) error {
 	}
 
 	if s.MaxLength > 0 && l > s.MaxLength {
-		return &types.ValidationErr{
+		return nil, &types.ValidationErr{
 			Field:   s.Field,
 			Path:    path,
 			Value:   vStr,
@@ -77,7 +77,7 @@ func (s *String) Validate(v any, path []any, lang string) error {
 		}
 	}
 
-	return nil
+	return &vStr, nil
 }
 
 func shortStringErr(exp, got int, lang string) string {

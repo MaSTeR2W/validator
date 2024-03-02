@@ -6,47 +6,46 @@ import (
 )
 
 type Bool struct {
-	Field  string
-	NotNil bool
+	Field   string
+	NilAble bool
 }
 
 func (b *Bool) GetField() string {
 	return b.Field
 }
 
-func (b *Bool) Validate(v any, path []any, lang string) (bool, error) {
+func (b *Bool) Validate(v any, path []any, lang string) (*bool, error) {
 
 	if v == nil {
-		if b.NotNil {
-			return false, &types.ValidationErr{
+		if b.NilAble {
+			return nil, &types.ValidationErr{
 				Field:   b.Field,
 				Path:    path,
 				Value:   types.Omit,
 				Message: errors.InvalidDataType("bolean", v, lang),
 			}
 		}
-		return false, nil
+		return nil, nil
 	}
 
-	var _, ok = v.(bool)
+	if vB, ok := v.(bool); ok {
 
-	if ok {
-		return false, nil
+		return &vB, nil
 	}
 
-	var strBool string
-	strBool, ok = v.(string)
-
-	if ok {
+	if strBool, ok := v.(string); ok {
+		var bo bool = true
 		if strBool == "true" {
-			return true, nil
+			return &bo, nil
 		}
 
 		if strBool == "false" {
-			return false, nil
+			bo = false
+			return &bo, nil
 		}
 	}
-	return false, &types.ValidationErr{
+
+	return nil, &types.ValidationErr{
 		Field:   b.Field,
 		Path:    path,
 		Value:   v,

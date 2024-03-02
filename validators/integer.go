@@ -10,28 +10,28 @@ import (
 )
 
 type Integer[T constraint.Ints | constraint.Uints] struct {
-	Field  string
-	NotNil bool
-	Min    int64
-	Max    int64
+	Field   string
+	NilAble bool
+	Min     int64
+	Max     int64
 }
 
 func (i *Integer[T]) GetField() string {
 	return i.Field
 }
 
-func (i *Integer[T]) Validate(v any, path []any, lang string) (T, error) {
+func (i *Integer[T]) Validate(v any, path []any, lang string) (*T, error) {
 
 	if v == nil {
-		if i.NotNil {
-			return 0, &types.ValidationErr{
+		if !i.NilAble {
+			return nil, &types.ValidationErr{
 				Field:   i.Field,
 				Path:    path,
 				Value:   types.Omit,
 				Message: errors.InvalidDataType("string", v, lang),
 			}
 		}
-		return 0, nil
+		return nil, nil
 	}
 	// fV: float value
 	// json.marshal convert any number to float64
@@ -43,7 +43,7 @@ func (i *Integer[T]) Validate(v any, path []any, lang string) (T, error) {
 		strV, isString := v.(string)
 
 		if !isString {
-			return 0, &types.ValidationErr{
+			return nil, &types.ValidationErr{
 				Field:   i.Field,
 				Path:    path,
 				Value:   types.Omit,
@@ -53,7 +53,7 @@ func (i *Integer[T]) Validate(v any, path []any, lang string) (T, error) {
 
 		var err error
 		if iV, err = strconv.ParseInt(strV, 10, 64); err != nil {
-			return 0, &types.ValidationErr{
+			return nil, &types.ValidationErr{
 				Field:   i.Field,
 				Path:    path,
 				Value:   types.Omit,
@@ -62,7 +62,7 @@ func (i *Integer[T]) Validate(v any, path []any, lang string) (T, error) {
 		}
 	} else {
 		if fV != math.Trunc(fV) {
-			return 0, &types.ValidationErr{
+			return nil, &types.ValidationErr{
 				Field:   i.Field,
 				Path:    path,
 				Value:   types.Omit,
@@ -75,7 +75,8 @@ func (i *Integer[T]) Validate(v any, path []any, lang string) (T, error) {
 	// iV: integer value
 
 	if iV < i.Min {
-		return 0, &types.ValidationErr{
+
+		return nil, &types.ValidationErr{
 			Field:   i.Field,
 			Path:    path,
 			Value:   iV,
@@ -84,15 +85,15 @@ func (i *Integer[T]) Validate(v any, path []any, lang string) (T, error) {
 	}
 
 	if iV > i.Max {
-		return 0, &types.ValidationErr{
+		return nil, &types.ValidationErr{
 			Field:   i.Field,
 			Path:    path,
 			Value:   iV,
 			Message: bigIntErr(i.Max, lang),
 		}
 	}
-
-	return 0, nil
+	var tV = T(iV)
+	return &tV, nil
 }
 
 func smallIntErr(exp int64, lang string) string {
