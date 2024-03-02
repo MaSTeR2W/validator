@@ -11,7 +11,6 @@ import (
 
 type Email struct {
 	Field   string
-	NotNil  bool
 	CheckMx bool
 }
 
@@ -19,24 +18,11 @@ func (e *Email) GetField() string {
 	return e.Field
 }
 
-func (e *Email) Validate(v any, path []any, lang string) error {
-
-	if v == nil {
-		if e.NotNil {
-			return &types.ValidationErr{
-				Field:   e.Field,
-				Path:    path,
-				Value:   types.Omit,
-				Message: errors.InvalidDataType("string", v, lang),
-			}
-		}
-		return nil
-	}
-
+func (e *Email) Validate(v any, path []any, lang string) (string, error) {
 	var email, ok = v.(string)
 
 	if !ok {
-		return &types.ValidationErr{
+		return "", &types.ValidationErr{
 			Field:   e.Field,
 			Path:    path,
 			Value:   types.Omit,
@@ -47,7 +33,7 @@ func (e *Email) Validate(v any, path []any, lang string) error {
 	var emailLen = len(email)
 
 	if emailLen < 5 {
-		return &types.ValidationErr{
+		return "", &types.ValidationErr{
 			Field:   e.Field,
 			Path:    path,
 			Value:   email,
@@ -56,7 +42,7 @@ func (e *Email) Validate(v any, path []any, lang string) error {
 	}
 
 	if emailLen > 320 {
-		return &types.ValidationErr{
+		return "", &types.ValidationErr{
 			Field:   e.Field,
 			Path:    path,
 			Value:   email,
@@ -69,7 +55,7 @@ func (e *Email) Validate(v any, path []any, lang string) error {
 	var partsLen = len(parts)
 
 	if partsLen == 1 {
-		return &types.ValidationErr{
+		return "", &types.ValidationErr{
 			Field:   e.Field,
 			Path:    path,
 			Value:   email,
@@ -78,7 +64,7 @@ func (e *Email) Validate(v any, path []any, lang string) error {
 	}
 
 	if partsLen > 2 {
-		return &types.ValidationErr{
+		return "", &types.ValidationErr{
 			Field:   e.Field,
 			Path:    path,
 			Value:   email,
@@ -89,10 +75,15 @@ func (e *Email) Validate(v any, path []any, lang string) error {
 	var err = IsLocalPartValid(e.Field, email, parts[0], path, lang)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return IsDomainNameValid(e.Field, email, parts[1], path, e.CheckMx, lang)
+	err = IsDomainNameValid(e.Field, email, parts[1], path, e.CheckMx, lang)
+	if err != nil {
+		return "", err
+	}
+
+	return email, nil
 
 }
 
