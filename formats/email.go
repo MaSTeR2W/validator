@@ -1,11 +1,13 @@
-package validators
+package formats
 
 import (
 	"strconv"
 	"strings"
+
+	"github.com/MaSTeR2W/validator/errors"
+	"github.com/MaSTeR2W/validator/types"
 )
 
-// RFC 5322
 type Email struct {
 	Field  string
 	NotNil bool
@@ -15,14 +17,15 @@ func (e *Email) GetField() string {
 	return e.Field
 }
 
-func (e *Email) Validate(v any, lang string) error {
+func (e *Email) Validate(v any, path []any, lang string) error {
 
 	if v == nil {
 		if e.NotNil {
-			return &ValidationErr{
+			return &types.ValidationErr{
 				Field:   e.Field,
-				Value:   null,
-				Message: invalidDataType("string", v, lang),
+				Path:    path,
+				Value:   types.Omit,
+				Message: errors.InvalidDataType("string", v, lang),
 			}
 		}
 		return nil
@@ -31,26 +34,29 @@ func (e *Email) Validate(v any, lang string) error {
 	var email, ok = v.(string)
 
 	if !ok {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   e.Field,
-			Value:   v,
-			Message: invalidDataType("string", v, lang),
+			Path:    path,
+			Value:   types.Omit,
+			Message: errors.InvalidDataType("string", v, lang),
 		}
 	}
 
 	var emailLen = len(email)
 
 	if emailLen < 5 {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   e.Field,
+			Path:    path,
 			Value:   email,
 			Message: shortEmailErr(emailLen, lang),
 		}
 	}
 
 	if emailLen > 320 {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   e.Field,
+			Path:    path,
 			Value:   email,
 			Message: longEmailErr(emailLen, lang),
 		}
@@ -61,28 +67,30 @@ func (e *Email) Validate(v any, lang string) error {
 	var partsLen = len(parts)
 
 	if partsLen == 1 {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   e.Field,
+			Path:    path,
 			Value:   email,
 			Message: missingAtSignErr(lang),
 		}
 	}
 
 	if partsLen > 2 {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   e.Field,
+			Path:    path,
 			Value:   email,
 			Message: tooManyAtSignErr(lang),
 		}
 	}
 
-	var err = IsLocalPartValid(e.Field, email, parts[0], lang)
+	var err = IsLocalPartValid(e.Field, email, parts[0], path, lang)
 
 	if err != nil {
 		return err
 	}
 
-	return IsDomainNameValid(e.Field, email, parts[1], lang)
+	return IsDomainNameValid(e.Field, email, parts[1], path, lang)
 
 }
 
@@ -121,38 +129,42 @@ func tooManyAtSignErr(lang string) string {
 
 var allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789."
 
-var PERIOD = "."[0]
+var PERIOD byte = '.'
 
-func IsDomainNameValid(field, email, domain, lang string) error {
+func IsDomainNameValid(field, email, domain string, path []any, lang string) error {
 	var l = len(domain)
 
 	if l < 1 {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   field,
+			Path:    path,
 			Value:   email,
 			Message: domain_shortErr(l, lang),
 		}
 	}
 
 	if l > 255 {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   field,
+			Path:    path,
 			Value:   email,
 			Message: domain_longErr(l, lang),
 		}
 	}
 
 	if domain[0] == PERIOD {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   field,
+			Path:    path,
 			Value:   email,
 			Message: domain_startsWithPeriodErr(lang),
 		}
 	}
 
 	if domain[l-1] == PERIOD {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   field,
+			Path:    path,
 			Value:   email,
 			Message: domain_endsWithPeriodErr(lang),
 		}
@@ -161,16 +173,18 @@ func IsDomainNameValid(field, email, domain, lang string) error {
 	for i, r := range domain {
 		if r == rune(PERIOD) {
 			if i > 1 && domain[i-1] == PERIOD {
-				return &ValidationErr{
+				return &types.ValidationErr{
 					Field:   field,
+					Path:    path,
 					Value:   email,
 					Message: domain_twoAdjacentPeriodsErr(lang),
 				}
 			}
 		}
 		if !strings.ContainsRune(allowedChars, r) {
-			return &ValidationErr{
+			return &types.ValidationErr{
 				Field:   field,
+				Path:    path,
 				Value:   email,
 				Message: domain_invalidCharacterErr(r, lang),
 			}
@@ -182,8 +196,9 @@ func IsDomainNameValid(field, email, domain, lang string) error {
 		var l = len(label)
 
 		if l > 63 {
-			return &ValidationErr{
+			return &types.ValidationErr{
 				Field:   field,
+				Path:    path,
 				Value:   email,
 				Message: label_longErr(l, i+1, lang),
 			}
@@ -194,13 +209,14 @@ func IsDomainNameValid(field, email, domain, lang string) error {
 	// check mx record for domain
 	/* mxRcds, err := net.LookupMX(domain)
 
-	if err != nil || len(mxRcds) == 0 {
-		return &ValidationErr{
-			Field:   field,
-			Value:   email,
-			Message: "",
-		}
-	} */
+		if err != nil || len(mxRcds) == 0 {
+			return &types.ValidationErr{
+				Field:   field,
+	Path:    path,
+				Value:   email,
+				Message: "",
+			}
+		} */
 
 	return nil
 }
@@ -268,36 +284,40 @@ func label_longErr(labelLen, sec int, lang string) string {
 
 // var allowedLocalPartChars = domainAllowedChars + "-+!#$%&'*/=?`^{}[]|~"
 
-func IsLocalPartValid(field, email, localPart, lang string) error {
+func IsLocalPartValid(field, email, localPart string, path []any, lang string) error {
 	var l = len(localPart)
 
 	if l == 0 {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   field,
+			Path:    path,
 			Value:   email,
 			Message: local_shortErr(l, lang),
 		}
 	}
 
 	if l > 64 {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   field,
+			Path:    path,
 			Value:   email,
 			Message: local_longErr(l, lang),
 		}
 	}
 
 	if localPart[0] == PERIOD {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   field,
+			Path:    path,
 			Value:   email,
 			Message: local_startsWithPeriodErr(lang),
 		}
 	}
 
 	if localPart[l-1] == PERIOD {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   field,
+			Path:    path,
 			Value:   email,
 			Message: local_endsWithPeriodErr(lang),
 		}
@@ -306,16 +326,18 @@ func IsLocalPartValid(field, email, localPart, lang string) error {
 	for i, r := range localPart {
 		if r == rune(PERIOD) {
 			if i > 1 && localPart[i-1] == PERIOD {
-				return &ValidationErr{
+				return &types.ValidationErr{
 					Field:   field,
+					Path:    path,
 					Value:   email,
 					Message: local_twoAdjacentPeriodsErr(lang),
 				}
 			}
 		}
 		if !strings.ContainsRune(allowedChars, r) {
-			return &ValidationErr{
+			return &types.ValidationErr{
 				Field:   field,
+				Path:    path,
 				Value:   email,
 				Message: local_invalidCharacterErr(r, lang),
 			}

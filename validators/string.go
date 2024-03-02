@@ -4,6 +4,9 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/MaSTeR2W/validator/errors"
+	"github.com/MaSTeR2W/validator/types"
 )
 
 type String struct {
@@ -18,14 +21,15 @@ func (s *String) GetField() string {
 	return s.Field
 }
 
-func (s *String) Validate(v any, lang string) error {
+func (s *String) Validate(v any, path []any, lang string) error {
 
 	if v == nil {
 		if s.NotNil {
-			return &ValidationErr{
+			return &types.ValidationErr{
 				Field:   s.Field,
-				Value:   null,
-				Message: invalidDataType("string", v, lang),
+				Path:    path,
+				Value:   types.Omit,
+				Message: errors.InvalidDataType("string", v, lang),
 			}
 		}
 		return nil
@@ -34,17 +38,19 @@ func (s *String) Validate(v any, lang string) error {
 	var vStr, ok = v.(string)
 
 	if !ok {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   s.Field,
-			Value:   v,
-			Message: invalidDataType("string", v, lang),
+			Path:    path,
+			Value:   types.Omit,
+			Message: errors.InvalidDataType("string", v, lang),
 		}
 	}
 
 	if s.Enum != nil {
 		if !slices.Contains(s.Enum, vStr) {
-			return &ValidationErr{
+			return &types.ValidationErr{
 				Field:   s.Field,
+				Path:    path,
 				Value:   vStr,
 				Message: unexpectedValue(s.Enum, vStr, lang),
 			}
@@ -54,16 +60,18 @@ func (s *String) Validate(v any, lang string) error {
 
 	var l = len(vStr)
 	if l < s.MinLength {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   s.Field,
+			Path:    path,
 			Value:   vStr,
 			Message: shortStringErr(s.MinLength, l, lang),
 		}
 	}
 
 	if s.MaxLength > 0 && l > s.MaxLength {
-		return &ValidationErr{
+		return &types.ValidationErr{
 			Field:   s.Field,
+			Path:    path,
 			Value:   vStr,
 			Message: lognStringErr(s.MaxLength, l, lang),
 		}

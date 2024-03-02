@@ -3,30 +3,35 @@ package validators
 import (
 	"math"
 	"strconv"
+
+	"github.com/MaSTeR2W/validator/constraint"
+	"github.com/MaSTeR2W/validator/errors"
+	"github.com/MaSTeR2W/validator/types"
 )
 
-type Integer struct {
+type Integer[T constraint.Ints | constraint.Uints] struct {
 	Field  string
 	NotNil bool
 	Min    int64
 	Max    int64
 }
 
-func (i *Integer) GetField() string {
+func (i *Integer[T]) GetField() string {
 	return i.Field
 }
 
-func (i *Integer) Validate(v any, lang string) error {
+func (i *Integer[T]) Validate(v any, path []any, lang string) (T, error) {
 
 	if v == nil {
 		if i.NotNil {
-			return &ValidationErr{
+			return 0, &types.ValidationErr{
 				Field:   i.Field,
-				Value:   null,
-				Message: invalidDataType("string", v, lang),
+				Path:    path,
+				Value:   types.Omit,
+				Message: errors.InvalidDataType("string", v, lang),
 			}
 		}
-		return nil
+		return 0, nil
 	}
 	// fV: float value
 	// json.marshal convert any number to float64
@@ -38,27 +43,30 @@ func (i *Integer) Validate(v any, lang string) error {
 		strV, isString := v.(string)
 
 		if !isString {
-			return &ValidationErr{
+			return 0, &types.ValidationErr{
 				Field:   i.Field,
-				Value:   v,
-				Message: invalidDataType("integer", v, lang),
+				Path:    path,
+				Value:   types.Omit,
+				Message: errors.InvalidDataType("integer", v, lang),
 			}
 		}
 
 		var err error
 		if iV, err = strconv.ParseInt(strV, 10, 64); err != nil {
-			return &ValidationErr{
+			return 0, &types.ValidationErr{
 				Field:   i.Field,
-				Value:   v,
-				Message: invalidDataType("integer", v, lang),
+				Path:    path,
+				Value:   types.Omit,
+				Message: errors.InvalidDataType("integer", v, lang),
 			}
 		}
 	} else {
 		if fV != math.Trunc(fV) {
-			return &ValidationErr{
+			return 0, &types.ValidationErr{
 				Field:   i.Field,
-				Value:   v,
-				Message: invalidDataType("integer", v, lang),
+				Path:    path,
+				Value:   types.Omit,
+				Message: errors.InvalidDataType("integer", v, lang),
 			}
 		}
 		iV = int64(fV)
@@ -67,22 +75,24 @@ func (i *Integer) Validate(v any, lang string) error {
 	// iV: integer value
 
 	if iV < i.Min {
-		return &ValidationErr{
+		return 0, &types.ValidationErr{
 			Field:   i.Field,
+			Path:    path,
 			Value:   iV,
 			Message: smallIntErr(i.Min, lang),
 		}
 	}
 
 	if iV > i.Max {
-		return &ValidationErr{
+		return 0, &types.ValidationErr{
 			Field:   i.Field,
+			Path:    path,
 			Value:   iV,
 			Message: bigIntErr(i.Max, lang),
 		}
 	}
 
-	return nil
+	return 0, nil
 }
 
 func smallIntErr(exp int64, lang string) string {

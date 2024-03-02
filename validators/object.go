@@ -1,13 +1,12 @@
 package validators
 
-import "strings"
-
+/*
 type Object struct {
 	Field    string
 	Required []string
 	OneOf    []string
 	NotNil   bool
-	Props    []Validator
+	Props    []types.Validator
 }
 
 func (o *Object) GetField() string {
@@ -15,13 +14,13 @@ func (o *Object) GetField() string {
 }
 
 func (o *Object) Validate(v any, lang string) error {
-	var errs = ValidationErrs{}
+	var errs = types.ValidationErrs{}
 	if v == nil {
 		if o.NotNil {
-			errs = append(errs, &ValidationErr{
+			errs = append(errs, &types.ValidationErr{
 				Field:   o.Field,
-				Value:   null,
-				Message: invalidDataType("map[string]any", v, lang),
+				Value:   types.Omit,
+				Message: errors.InvalidDataType("map[string]any", v, lang),
 			})
 
 			return &errs
@@ -33,10 +32,10 @@ func (o *Object) Validate(v any, lang string) error {
 	var m, ok = v.(map[string]any)
 
 	if !ok {
-		errs = append(errs, &ValidationErr{
+		errs = append(errs, &types.ValidationErr{
 			Field:   o.Field,
-			Value:   v,
-			Message: invalidDataType("map[string]any", v, lang),
+			Value:   types.Omit,
+			Message: errors.InvalidDataType("map[string]any", v, lang),
 		})
 		return &errs
 	}
@@ -44,7 +43,7 @@ func (o *Object) Validate(v any, lang string) error {
 	if o.Required != nil {
 		for _, key := range o.Required {
 			if _, ok := m[key]; !ok {
-				errs = append(errs, &ValidationErr{
+				errs = append(errs, &types.ValidationErr{
 					Field:   key,
 					Message: missingProp(lang),
 				})
@@ -61,7 +60,7 @@ func (o *Object) Validate(v any, lang string) error {
 			}
 		}
 		if !found {
-			errs = append(errs, &ValidationErr{
+			errs = append(errs, &types.ValidationErr{
 				Message: requiredOneOf(o.OneOf, lang),
 			})
 
@@ -102,7 +101,7 @@ func requiredOneOf(oneOf []string, lang string) string {
 	}
 	return "One of the following properties is required: (" + joinedOneOf + ")"
 }
-
+*/
 /* func mapKeys(m map[string]any) []string {
 	var keys = make([]string, len(m))
 	for key := range m {
