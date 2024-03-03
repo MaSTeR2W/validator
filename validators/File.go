@@ -9,6 +9,15 @@ import (
 	"github.com/MaSTeR2W/validator/types"
 )
 
+type Size int64
+
+const (
+	BYTE Size = 1
+	KB        = BYTE * 1024
+	MG        = KB * 1024
+	GB        = MG * 1024
+)
+
 type File struct {
 	Field      string
 	Type       string
