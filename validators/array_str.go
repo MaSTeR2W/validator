@@ -10,7 +10,6 @@ import (
 
 type Array_Str struct {
 	Field     string
-	NilAble   bool
 	MinLength int
 	MaxLength int
 	Validator types.Validator[*string]
@@ -22,15 +21,10 @@ func (a *Array_Str) GetField() string {
 
 func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
 	if v == nil {
-		if a.NilAble {
-			return nil, nil
-		}
-
 		return nil, &types.ValidationErr{
 			Field:   a.Field,
-			Value:   v,
 			Path:    path,
-			Message: errors.InvalidDataType("[]string", v, lang),
+			Message: errors.RequiredFieldErr(lang),
 		}
 	}
 
