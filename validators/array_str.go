@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"encoding/json"
 	"slices"
 	"strconv"
 
@@ -21,7 +22,11 @@ func (a *Array_Str) GetField() string {
 }
 
 func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
-	if v == nil {
+
+	var arrStr []string
+
+	switch arr := v.(type) {
+	case nil:
 		if a.NilAble {
 			return nil, nil
 		}
@@ -32,11 +37,35 @@ func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
 			Path:    path,
 			Message: errors.RequiredFieldErr(lang),
 		}
-	}
 
-	var arrAny []any
-	var ok bool
-	if arrAny, ok = v.([]any); !ok {
+	case []any:
+		arrStr = make([]string, len(arr))
+		var ok bool
+		for i, e := range arr {
+			var strE string
+			if strE, ok = e.(string); !ok {
+				return nil, &types.ValidationErr{
+					Field:   a.Field,
+					Value:   v,
+					Path:    append(path, i),
+					Message: errors.InvalidDataType("string", e, lang),
+				}
+			}
+			arrStr = append(arrStr, strE)
+		}
+
+	case string:
+		var err = json.Unmarshal([]byte(arr), &arrStr)
+		if err != nil {
+			return nil, &types.ValidationErr{
+				Field:   a.Field,
+				Value:   arr,
+				Path:    path,
+				Message: invalidJSONArr(lang),
+			}
+		}
+
+	default:
 		return nil, &types.ValidationErr{
 			Field:   a.Field,
 			Value:   v,
@@ -45,7 +74,7 @@ func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
 		}
 	}
 
-	var l = len(arrAny)
+	var l = len(arrStr)
 
 	if l < a.MinLength {
 		return nil, &types.ValidationErr{
@@ -64,20 +93,6 @@ func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
 			Path:    path,
 			Message: longArrErr(a.MinLength, l, lang),
 		}
-	}
-
-	var arrStr = make([]string, l)
-	for i, e := range arrAny {
-		var strE string
-		if strE, ok = e.(string); !ok {
-			return nil, &types.ValidationErr{
-				Field:   a.Field,
-				Value:   v,
-				Path:    append(path, i),
-				Message: errors.InvalidDataType("string", e, lang),
-			}
-		}
-		arrStr = append(arrStr, strE)
 	}
 
 	if a.Validator != nil {
@@ -110,4 +125,11 @@ func longArrErr(exp int, got int, lang string) string {
 		return "يجب إنقاص عدد عناصر المصفوفة إلى " + sExp + " أو أقل (عدد عناصر المصفوفة حاليا " + sGot + ")"
 	}
 	return "Should decrease the number of elements of array to " + sExp + " or less (the current number of element is " + sGot + ")"
+}
+
+func invalidJSONArr(lang string) string {
+	if lang == "ar" {
+		return "لا يمكن تحويل القيمة إلى ([]string)"
+	}
+	return "Cannot convert value to ([]string)"
 }
