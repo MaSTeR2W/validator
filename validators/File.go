@@ -12,7 +12,9 @@ import (
 type File struct {
 	Field      string
 	Type       string
+	NilAble    bool
 	Extensions []string
+	MaxSize    int64
 }
 
 func (f *File) GetField() string {
@@ -24,6 +26,9 @@ func (f *File) Validate(files []*multipart.FileHeader, path []any, lang string) 
 	var l = len(files)
 
 	if l == 0 || files[0] == nil {
+		if f.NilAble {
+			return nil, nil
+		}
 		return nil, &types.ValidationErr{
 			Field:   f.Field,
 			Path:    path,
@@ -47,7 +52,7 @@ func (f *File) Validate(files []*multipart.FileHeader, path []any, lang string) 
 		return nil, &types.ValidationErr{
 			Field:   f.Field,
 			Path:    path,
-			Message: invalidFileType(strings.Split(mimeType, "/")[0], lang),
+			Message: invalidFileTypeErr(strings.Split(mimeType, "/")[0], lang),
 		}
 	}
 
@@ -55,7 +60,15 @@ func (f *File) Validate(files []*multipart.FileHeader, path []any, lang string) 
 		return nil, &types.ValidationErr{
 			Field:   f.Field,
 			Path:    path,
-			Message: invalidExtension(f.Extensions, extension, lang),
+			Message: invalidExtensionErr(f.Extensions, extension, lang),
+		}
+	}
+
+	if f.MaxSize != 0 && file.Size > f.MaxSize {
+		return nil, &types.ValidationErr{
+			Field:   f.Field,
+			Path:    path,
+			Message: bigSizeFileErr(f.MaxSize, file.Size, lang),
 		}
 	}
 
@@ -77,17 +90,26 @@ func noFileErr(lang string) string {
 	return "Required file."
 }
 
-func invalidFileType(got string, lang string) string {
+func invalidFileTypeErr(got string, lang string) string {
 	if lang == "ar" {
 		return "يجب أن يكون الملف من النوع (image) وليس (" + got + ")"
 	}
 	return "The file type should be (image), not (" + got + ")"
 }
 
-func invalidExtension(exp []string, got string, lang string) string {
+func invalidExtensionErr(exp []string, got string, lang string) string {
 	var strExp = strings.Join(exp, ",")
 	if lang == "ar" {
 		return "يجب أن يكون امتداد الملف واحد من: (" + strExp + ") وليس (" + got + ")"
 	}
 	return "The file extension should be one of: (" + strExp + "), not (" + got + ")"
+}
+
+func bigSizeFileErr(exp int64, got int64, lang string) string {
+	var sExp, sGot = strconv.FormatInt(exp, 10), strconv.FormatInt(got, 10)
+
+	if lang == "ar" {
+		return "يجب ألَّا يزيد حجم الملف على " + sExp + "B (حجم الملف الحالي " + sGot + "B)"
+	}
+	return "The file size should not exceed " + sExp + "B (The current file size is " + sGot + "B)"
 }
