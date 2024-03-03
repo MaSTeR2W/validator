@@ -86,10 +86,9 @@ func (i *Integer[T]) Validate(v any, path []any, lang string) (T, error) {
 }
 
 type NilInteger[T constraint.Ints | constraint.Uints] struct {
-	Field   string
-	NilAble bool
-	Min     int64
-	Max     int64
+	Field string
+	Min   int64
+	Max   int64
 }
 
 func (i *NilInteger[T]) GetField() string {
