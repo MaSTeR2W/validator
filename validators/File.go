@@ -9,7 +9,7 @@ import (
 	"github.com/MaSTeR2W/validator/types"
 )
 
-type Size int64
+type Size = int64
 
 const (
 	BYTE Size = 1
