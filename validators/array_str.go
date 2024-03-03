@@ -13,7 +13,7 @@ type Array_Str struct {
 	NilAble   bool
 	MinLength int
 	MaxLength int
-	Validator *types.Validator[string]
+	Validator *types.Validator[*string]
 }
 
 func (a *Array_Str) GetField() string {
