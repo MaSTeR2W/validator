@@ -24,6 +24,7 @@ func (e *Email) Validate(v any, path []any, lang string) (string, error) {
 		return "", &types.ValidationErr{
 			Field:   e.Field,
 			Path:    path,
+			Value:   types.Omit,
 			Message: errors.RequiredFieldErr(lang),
 		}
 	}

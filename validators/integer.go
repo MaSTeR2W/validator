@@ -25,6 +25,7 @@ func (i *Integer[T]) Validate(v any, path []any, lang string) (T, error) {
 	if v == nil {
 		return 0, &types.ValidationErr{
 			Field:   i.Field,
+			Value:   types.Omit,
 			Path:    path,
 			Message: errors.RequiredFieldErr(lang),
 		}

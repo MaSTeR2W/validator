@@ -27,6 +27,7 @@ func (p *Password) Validate(v any, path []any, lang string) (string, error) {
 		return "", &types.ValidationErr{
 			Field:   p.Field,
 			Path:    path,
+			Value:   types.Omit,
 			Message: errors.RequiredFieldErr(lang),
 		}
 	}

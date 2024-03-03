@@ -31,6 +31,7 @@ func (f *File) Validate(files []*multipart.FileHeader, path []any, lang string) 
 		}
 		return nil, &types.ValidationErr{
 			Field:   f.Field,
+			Value:   types.Omit,
 			Path:    path,
 			Message: noFileErr(lang),
 		}
@@ -39,6 +40,7 @@ func (f *File) Validate(files []*multipart.FileHeader, path []any, lang string) 
 	if l > 1 {
 		return nil, &types.ValidationErr{
 			Field:   f.Field,
+			Value:   types.Omit,
 			Path:    path,
 			Message: extraFilesErr(l, lang),
 		}
@@ -52,6 +54,7 @@ func (f *File) Validate(files []*multipart.FileHeader, path []any, lang string) 
 		return nil, &types.ValidationErr{
 			Field:   f.Field,
 			Path:    path,
+			Value:   types.Omit,
 			Message: invalidFileTypeErr(strings.Split(mimeType, "/")[0], lang),
 		}
 	}
@@ -60,6 +63,7 @@ func (f *File) Validate(files []*multipart.FileHeader, path []any, lang string) 
 		return nil, &types.ValidationErr{
 			Field:   f.Field,
 			Path:    path,
+			Value:   types.Omit,
 			Message: invalidExtensionErr(f.Extensions, extension, lang),
 		}
 	}
@@ -68,6 +72,7 @@ func (f *File) Validate(files []*multipart.FileHeader, path []any, lang string) 
 		return nil, &types.ValidationErr{
 			Field:   f.Field,
 			Path:    path,
+			Value:   types.Omit,
 			Message: bigSizeFileErr(f.MaxSize, file.Size, lang),
 		}
 	}

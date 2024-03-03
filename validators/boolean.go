@@ -21,6 +21,7 @@ func (b *Bool) Validate(v any, path []any, lang string) (bool, error) {
 	if v == nil {
 		return false, &types.ValidationErr{
 			Field:   b.Field,
+			Value:   types.Omit,
 			Path:    path,
 			Message: errors.RequiredFieldErr(lang),
 		}
