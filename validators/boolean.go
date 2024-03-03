@@ -8,6 +8,8 @@ import (
 type Bool struct {
 	Field   string
 	NilAble bool
+	BeTrue  bool
+	BeFalse bool
 }
 
 func (b *Bool) GetField() string {
@@ -28,28 +30,60 @@ func (b *Bool) Validate(v any, path []any, lang string) (*bool, error) {
 		return nil, nil
 	}
 
-	if vB, ok := v.(bool); ok {
+	var vB bool
+	var ok bool
+	if vB, ok = v.(bool); ok {
 
-		return &vB, nil
-	}
+	} else if strBool, ok := v.(string); ok {
 
-	if strBool, ok := v.(string); ok {
-		var bo bool = true
 		if strBool == "true" {
-			return &bo, nil
+			vB = true
 		}
 
 		if strBool == "false" {
-			bo = false
-			return &bo, nil
+			vB = false
+		}
+	} else {
+		return nil, &types.ValidationErr{
+			Field:   b.Field,
+			Path:    path,
+			Value:   v,
+			Message: errors.InvalidDataType("boolean", v, lang),
 		}
 	}
 
-	return nil, &types.ValidationErr{
-		Field:   b.Field,
-		Path:    path,
-		Value:   v,
-		Message: errors.InvalidDataType("boolean", v, lang),
+	if b.BeTrue && !vB {
+		return nil, &types.ValidationErr{
+			Field:   b.Field,
+			Path:    path,
+			Value:   v,
+			Message: NotTrueErr(lang),
+		}
 	}
 
+	if b.BeFalse && vB {
+		return nil, &types.ValidationErr{
+			Field:   b.Field,
+			Path:    path,
+			Value:   v,
+			Message: NotFalseErr(lang),
+		}
+	}
+
+	return &vB, nil
+}
+
+func NotTrueErr(lang string) string {
+	if lang == "ar" {
+		return "يجب أن تكون القيمة (true) في حين أنها ليست كذلك"
+	}
+	return "Value should be (true) while it is not"
+
+}
+
+func NotFalseErr(lang string) string {
+	if lang == "ar" {
+		return "يجب أن تكون القيمة (false) في حين أنها ليست كذلك"
+	}
+	return "Value should be (false) while it is not"
 }
