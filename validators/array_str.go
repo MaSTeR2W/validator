@@ -84,7 +84,7 @@ func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
 		var err error
 		for i, e := range arrStr {
 			var curPath = append(slices.Clone(path), i)
-			_, err = (*a.Validator).Validate(e, curPath, lang)
+			_, err = a.Validator.Validate(e, curPath, lang)
 			if err != nil {
 				return nil, err
 			}
