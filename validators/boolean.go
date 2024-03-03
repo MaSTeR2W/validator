@@ -18,6 +18,14 @@ func (b *Bool) GetField() string {
 
 func (b *Bool) Validate(v any, path []any, lang string) (bool, error) {
 
+	if v == nil {
+		return false, &types.ValidationErr{
+			Field:   b.Field,
+			Path:    path,
+			Message: errors.RequiredFieldErr(lang),
+		}
+	}
+
 	var vB bool
 	var ok bool
 	if vB, ok = v.(bool); ok {

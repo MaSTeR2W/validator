@@ -22,6 +22,14 @@ func (i *Integer[T]) GetField() string {
 
 func (i *Integer[T]) Validate(v any, path []any, lang string) (T, error) {
 
+	if v == nil {
+		return 0, &types.ValidationErr{
+			Field:   i.Field,
+			Path:    path,
+			Message: errors.RequiredFieldErr(lang),
+		}
+	}
+
 	// fV: float value
 	// json.marshal convert any number to float64
 	var iV int64

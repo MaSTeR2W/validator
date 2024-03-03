@@ -22,6 +22,15 @@ var lwRgp = regexp.MustCompile("[a-z]")
 var nmRgp = regexp.MustCompile("[0-9]")
 
 func (p *Password) Validate(v any, path []any, lang string) (string, error) {
+
+	if v == nil {
+		return "", &types.ValidationErr{
+			Field:   p.Field,
+			Path:    path,
+			Message: errors.RequiredFieldErr(lang),
+		}
+	}
+
 	var password string
 	var ok bool
 	if password, ok = v.(string); !ok {

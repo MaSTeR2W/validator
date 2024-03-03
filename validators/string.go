@@ -22,6 +22,14 @@ func (s *String) GetField() string {
 
 func (s *String) Validate(v any, path []any, lang string) (string, error) {
 
+	if v == nil {
+		return "", &types.ValidationErr{
+			Field:   s.Field,
+			Path:    path,
+			Message: errors.RequiredFieldErr(lang),
+		}
+	}
+
 	var vStr, ok = v.(string)
 
 	if !ok {

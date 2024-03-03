@@ -19,6 +19,15 @@ func (e *Email) GetField() string {
 }
 
 func (e *Email) Validate(v any, path []any, lang string) (string, error) {
+
+	if v == nil {
+		return "", &types.ValidationErr{
+			Field:   e.Field,
+			Path:    path,
+			Message: errors.RequiredFieldErr(lang),
+		}
+	}
+
 	var email, ok = v.(string)
 
 	if !ok {
