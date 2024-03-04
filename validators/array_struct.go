@@ -8,21 +8,19 @@ import (
 	"github.com/MaSTeR2W/validator/types"
 )
 
-type Array_Str struct {
+type Array_Struct[T types.StructValidator[T]] struct {
 	Field     string
 	NilAble   bool
 	MinLength int
 	MaxLength int
-	Validator types.Validator[*string]
 }
 
-func (a *Array_Str) GetField() string {
+func (a *Array_Struct[T]) GetField() string {
 	return a.Field
 }
 
-func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
-
-	var arrStr []string
+func (a *Array_Struct[T]) Validate(v any, path []any, lang string) ([]*T, error) {
+	var arrAny []any
 
 	switch arr := v.(type) {
 	case nil:
@@ -38,23 +36,9 @@ func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
 		}
 
 	case []any:
-		arrStr = make([]string, len(arr))
-		var ok bool
-		for i, e := range arr {
-			var strE string
-			if strE, ok = e.(string); !ok {
-				return nil, &types.ValidationErr{
-					Field:   a.Field,
-					Value:   v,
-					Path:    append(path, i),
-					Message: errors.InvalidDataType("string", e, lang),
-				}
-			}
-			arrStr = append(arrStr, strE)
-		}
-
+		arrAny = arr
 	case string:
-		var err = json.Unmarshal([]byte(arr), &arrStr)
+		var err = json.Unmarshal([]byte(arr), &arrAny)
 		if err != nil {
 			return nil, &types.ValidationErr{
 				Field:   a.Field,
@@ -69,11 +53,11 @@ func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
 			Field:   a.Field,
 			Value:   v,
 			Path:    path,
-			Message: errors.InvalidDataType("[]string", v, lang),
+			Message: errors.InvalidDataType("[]map[string]any", v, lang),
 		}
 	}
 
-	var l = len(arrStr)
+	var l = len(arrAny)
 
 	if l < a.MinLength {
 		return nil, &types.ValidationErr{
@@ -82,7 +66,6 @@ func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
 			Path:    path,
 			Message: errors.ShortArrErr(a.MinLength, l, lang),
 		}
-
 	}
 
 	if a.MaxLength > -1 && l > a.MaxLength {
@@ -94,16 +77,18 @@ func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
 		}
 	}
 
-	if a.Validator != nil {
-		var err error
-		for i, e := range arrStr {
-			var curPath = append(slices.Clone(path), i)
-			_, err = a.Validator.Validate(e, curPath, lang)
-			if err != nil {
-				return nil, err
-			}
+	var arrOfT = make([]*T, l)
+
+	for i, e := range arrAny {
+		var t T
+		var err = t.Validate(e, append(slices.Clone(path), i), lang)
+
+		if err != nil {
+			return nil, err
 		}
+
+		arrOfT = append(arrOfT, &t)
 	}
 
-	return arrStr, nil
+	return arrOfT, nil
 }
