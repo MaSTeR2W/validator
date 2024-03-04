@@ -13,13 +13,14 @@ type Array_Struct[T types.StructValidator[T]] struct {
 	NilAble   bool
 	MinLength int
 	MaxLength int
+	Validator T
 }
 
 func (a *Array_Struct[T]) GetField() string {
 	return a.Field
 }
 
-func (a *Array_Struct[T]) Validate(v any, stc T, path []any, lang string) ([]*T, error) {
+func (a *Array_Struct[T]) Validate(v any, path []any, lang string) ([]*T, error) {
 	var arrAny []any
 
 	switch arr := v.(type) {
@@ -80,7 +81,8 @@ func (a *Array_Struct[T]) Validate(v any, stc T, path []any, lang string) ([]*T,
 	var arrOfT = make([]*T, l)
 
 	for i, e := range arrAny {
-		var t, err = stc.Validate(e, a.Field, append(slices.Clone(path), i), lang)
+
+		var t, err = a.Validator(e, a.Field, append(slices.Clone(path), i), lang)
 
 		if err != nil {
 			return nil, err
