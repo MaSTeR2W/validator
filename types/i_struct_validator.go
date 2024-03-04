@@ -1,5 +1,5 @@
 package types
 
 type StructValidator[T any] interface {
-	Validate(v any, path []any, lang string) error
+	Validate(v any, field string, path []any, lang string) error
 }

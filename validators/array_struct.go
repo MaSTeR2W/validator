@@ -81,7 +81,7 @@ func (a *Array_Struct[T]) Validate(v any, path []any, lang string) ([]*T, error)
 
 	for i, e := range arrAny {
 		var t T
-		var err = t.Validate(e, append(slices.Clone(path), i), lang)
+		var err = t.Validate(e, a.Field, append(slices.Clone(path), i), lang)
 
 		if err != nil {
 			return nil, err
