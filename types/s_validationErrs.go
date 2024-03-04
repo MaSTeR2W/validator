@@ -1,19 +1,32 @@
 package types
 
-import "strings"
+import (
+	"strings"
+)
 
-type ValidationErrs []error
+type ValidationErrs []ValidationErr
 
 func (v *ValidationErrs) Error() string {
 	var str = "[\n\t"
 
-	var s = []error(*v)
-	var lastIndex = len(s) - 1
+	var lastIndex = len(*v) - 1
 
 	for i := 0; i < lastIndex; i++ {
 
-		str += strings.ReplaceAll(s[i].Error(), "\n\t", "\n\t\t") + "\n\t"
+		str += strings.ReplaceAll((*v)[i].Error(), "\n\t", "\n\t\t") + "\n\t"
 	}
 
-	return str + s[lastIndex].Error() + "\n]"
+	return str + (*v)[lastIndex].Error() + "\n]"
+}
+
+func (v ValidationErrs) MarshalJSON() ([]byte, error) {
+	var es = []byte{91}
+
+	for _, e := range v {
+		js, _ := e.MarshalJSON()
+		es = append(es, 44)
+		es = append(es, js...)
+	}
+
+	return append(es, 93), nil
 }
