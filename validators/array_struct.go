@@ -8,12 +8,12 @@ import (
 	"github.com/MaSTeR2W/validator/types"
 )
 
-type Array_Struct[T types.StructValidator[T]] struct {
+type Array_Struct[T any] struct {
 	Field     string
 	NilAble   bool
 	MinLength int
 	MaxLength int
-	Validator T
+	Validator types.StructValidator[T]
 }
 
 func (a *Array_Struct[T]) GetField() string {
