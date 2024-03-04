@@ -19,7 +19,7 @@ func (a *Array_Struct[T]) GetField() string {
 	return a.Field
 }
 
-func (a *Array_Struct[T]) Validate(v any, path []any, lang string) ([]*T, error) {
+func (a *Array_Struct[T]) Validate(v any, stc T, path []any, lang string) ([]*T, error) {
 	var arrAny []any
 
 	switch arr := v.(type) {
@@ -80,14 +80,13 @@ func (a *Array_Struct[T]) Validate(v any, path []any, lang string) ([]*T, error)
 	var arrOfT = make([]*T, l)
 
 	for i, e := range arrAny {
-		var t T
-		var err = t.Validate(e, a.Field, append(slices.Clone(path), i), lang)
+		var t, err = stc.Validate(e, a.Field, append(slices.Clone(path), i), lang)
 
 		if err != nil {
 			return nil, err
 		}
 
-		arrOfT = append(arrOfT, &t)
+		arrOfT = append(arrOfT, t)
 	}
 
 	return arrOfT, nil
