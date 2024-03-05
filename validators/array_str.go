@@ -38,7 +38,7 @@ func (a *Array_Str) Validate(v any, path []any, lang string) ([]string, error) {
 		}
 
 	case []any:
-		arrStr = make([]string, len(arr))
+		arrStr = make([]string, 0, len(arr))
 		var ok bool
 		for i, e := range arr {
 			var strE string

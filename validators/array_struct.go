@@ -78,7 +78,7 @@ func (a *Array_Struct[T]) Validate(v any, path []any, lang string) ([]*T, error)
 		}
 	}
 
-	var arrOfT = make([]*T, l)
+	var arrOfT = make([]*T, 0, l)
 
 	for i, e := range arrAny {
 
