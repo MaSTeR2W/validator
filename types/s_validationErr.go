@@ -29,8 +29,11 @@ func (v ValidationErr) MarshalJSON() ([]byte, error) {
 		for _, step := range v.Path {
 			arrStr += "," + hprFns.ToJSONString(step)
 		}
+		if len(arrStr) > 0 {
+			arrStr = arrStr[1:]
+		}
 
-		jsonStr += `"path": ` + arrStr[1:] + "],"
+		jsonStr += `"path": [` + arrStr + "],"
 	}
 
 	if v.Value != Omit {
