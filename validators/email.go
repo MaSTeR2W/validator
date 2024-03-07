@@ -130,7 +130,7 @@ func tooManyAtSignErr(lang string) string {
 	return "The email should contain only one @ sign"
 }
 
-var allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789."
+var allowedChars_domainPart = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789."
 
 var PERIOD byte = '.'
 
@@ -184,7 +184,7 @@ func IsDomainNameValid(field, email, domain string, path []any, checkMx bool, la
 				}
 			}
 		}
-		if !strings.ContainsRune(allowedChars, r) {
+		if !strings.ContainsRune(allowedChars_domainPart, r) {
 			return &types.ValidationErr{
 				Field:   field,
 				Path:    path,
@@ -296,6 +296,8 @@ func domain_invalidErr(lang string) string {
 
 // var allowedLocalPartChars = domainAllowedChars + "-+!#$%&'*/=?`^{}[]|~"
 
+var allowedChars_localPart = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+"
+
 func IsLocalPartValid(field, email, localPart string, path []any, lang string) error {
 	var l = len(localPart)
 
@@ -346,7 +348,7 @@ func IsLocalPartValid(field, email, localPart string, path []any, lang string) e
 				}
 			}
 		}
-		if !strings.ContainsRune(allowedChars, r) {
+		if !strings.ContainsRune(allowedChars_localPart, r) {
 			return &types.ValidationErr{
 				Field:   field,
 				Path:    path,
