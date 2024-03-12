@@ -40,6 +40,6 @@ func ToJSONString(i any) string {
 		}
 		return "false"
 	default:
-		return "[Type:" + reflect.TypeOf(v).String() + "]"
+		return "\"[Type:" + reflect.TypeOf(v).String() + "]\""
 	}
 }
