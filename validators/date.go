@@ -20,6 +20,16 @@ func (d *Date) GetField() string {
 }
 
 func (d *Date) Validate(v any, path []any, lang string) (string, error) {
+
+	if v == nil {
+		return "", &types.ValidationErr{
+			Field:   d.Field,
+			Path:    path,
+			Value:   types.Omit,
+			Message: errors.RequiredFieldErr(lang),
+		}
+	}
+
 	var dateStr, ok = v.(string)
 
 	if !ok {
