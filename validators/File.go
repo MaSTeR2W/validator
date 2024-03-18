@@ -57,14 +57,14 @@ func (f *File) Validate(files []*multipart.FileHeader, path []any, lang string) 
 	var file = files[0]
 
 	var mimeType = file.Header.Get("Content-type")
-	var extension, found = strings.CutPrefix(mimeType, "image/")
+	var extension, found = strings.CutPrefix(mimeType, f.Type+"/")
 
 	if !found {
 		return nil, &types.ValidationErr{
 			Field:   f.Field,
 			Path:    path,
 			Value:   types.Omit,
-			Message: invalidFileTypeErr(strings.Split(mimeType, "/")[0], lang),
+			Message: invalidFileTypeErr(f.Type, strings.Split(mimeType, "/")[0], lang),
 		}
 	}
 
@@ -104,11 +104,11 @@ func noFileErr(lang string) string {
 	return "Required file."
 }
 
-func invalidFileTypeErr(got string, lang string) string {
+func invalidFileTypeErr(exp string, got string, lang string) string {
 	if lang == "ar" {
-		return "يجب أن يكون الملف من النوع (image) وليس (" + got + ")"
+		return "يجب أن يكون الملف من النوع (" + exp + ") وليس (" + got + ")"
 	}
-	return "The file type should be (image), not (" + got + ")"
+	return "The file type should be (" + exp + "), not (" + got + ")"
 }
 
 func invalidExtensionErr(exp []string, got string, lang string) string {
