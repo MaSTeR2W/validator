@@ -39,6 +39,8 @@ func ToJSONString(i any) string {
 			return "true"
 		}
 		return "false"
+	case nil:
+		return "null"
 	default:
 		return "\"[Type:" + reflect.TypeOf(v).String() + "]\""
 	}
